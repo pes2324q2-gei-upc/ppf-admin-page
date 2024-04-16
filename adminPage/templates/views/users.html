@@ -1,13 +1,26 @@
-{% extends "./base.html" %}
-
+{% extends './base.html' %}
+{% load static %}
 {% block content %}
-<h1>User List</h1>
-{% for user in users %}
 <div class="container">
-    <hr>
-    {{user.username}}
-    <hr>
+  <div class="row">
+    <div class="col-md-12">
+      <h1>
+        <img width="150" src="{% static 'images/ppf-no-background.png' %}" alt="" class="img-fluid" />
+        List of Users
+        <hr>
+      </h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <ul class="list-group list-group-flush">
+        {% for user in users %}
+        <li class="list-group-item" style="background-color: rgb(168, 168, 168);">
+          <span class="fw-bold">{{ user.username }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
 </div>
-{% endfor %}
-<br>
-{% endblock content %}
+{% endblock %}
