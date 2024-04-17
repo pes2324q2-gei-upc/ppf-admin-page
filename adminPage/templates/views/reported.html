@@ -11,16 +11,24 @@
             </h1>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <ul class="list-group list-group-flush">
-                {% for user in users %}
-                <li class="list-group-item" style="background-color: rgb(168, 168, 168);">
-                    <span class="fw-bold">{{ user.username }}</span> - Reported {{ user.report_count }} times
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+    <ul class="list-group list-group-flush">
+        {% for user in users %}
+        <li class="list-group-item" style="background-color: rgb(168, 168, 168);">
+            <div class="row"> <!-- Add row wrapper -->
+                <div class="col-md-4">
+                    <span class="fw-bold">{{ user.username }}</span>
+                </div>
+                <div class="col-md-6" style="display: inline-block;"> <!-- Adjust column classes -->
+                    <span>Reported <b>{{ user.report_count }}</b> times</span>
+                </div>
+                <div class="col-md-2 center"> <!-- Adjust column classes -->
+                    <a href="{% url 'userReportsDetails' user.id %}">
+                        <button type="button" class="btn btn-primary">Details</button>
+                    </a>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
 </div>
 {% endblock %}

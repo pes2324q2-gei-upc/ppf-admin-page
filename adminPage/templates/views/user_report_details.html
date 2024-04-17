@@ -6,26 +6,30 @@
     <div class="col-md-12">
       <h1>
         <img width="150" src="{% static 'images/ppf-no-background.png' %}" alt="" class="img-fluid" />
-        List of Users
+        User Report Details
         <hr>
       </h1>
     </div>
   </div>
   <div class="row">
     <div class="col-md-12">
+      <h3> <b>{{user.username}}</b> has <b>{{reports_count}}</b> reports</h3>
+      <hr>
+    </div>
+
+    <div class="container">
       <ul class="list-group list-group-flush">
-        {% for user in users %}
+        {% for report in reports %}
         <li class="list-group-item" style="background-color: rgb(168, 168, 168);">
           <div class="row"> <!-- Add row wrapper -->
             <div class="col-md-4">
-              <span class="fw-bold">{{ user.username }}</span>
+              <span class="fw-bold"> {{ report.reporter.username }} -> {{report.reported.username}}</span>
             </div>
             <div class="col-md-6" style="display: inline-block;"> <!-- Adjust column classes -->
-              <!-- Add content for the middle column if needed -->
             </div>
             <div class="col-md-2 center"> <!-- Adjust column classes -->
-              <a href="{% url 'userDetails' user.id %}">
-                <button type="button" class="btn btn-primary">Details</button>
+              <a href="{% url 'reportsDetails' report.id %}">
+                <button type="button" class="btn btn-primary">Report Details</button>
               </a>
             </div>
           </div>

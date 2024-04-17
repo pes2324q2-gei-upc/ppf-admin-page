@@ -20,7 +20,11 @@ from adminPage import views
 
 
 urlpatterns = [
-    path ('', views.home, name='home'),
+    path('', views.home, name='home'),
     path('users/', views.users, name='users'),
-    path('reported/', views.reported, name='reported'),
+    path('users/<int:pk>/', views.userDetails, name='userDetails'),
+    path('reported/', views.reported, name='reports'),
+    path('users/<int:pk>/reports/', views.userReportsDetails,
+         name='userReportsDetails'),
+    path('reports/<int:pk>/', views.reportDetails, name='reportsDetails'),
 ]
