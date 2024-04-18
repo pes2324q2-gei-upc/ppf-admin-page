@@ -1,7 +1,53 @@
 from django.forms import model_to_dict
 from django.db.models import Subquery, OuterRef, Count
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+import requests
 from common.models.user import Driver, Report, User
+from rest_framework.authtoken.models import Token
+
+# create generic functions
+
+
+def sendDeleteRequest(user, token=None, url=None):
+    """
+    Sends a DELETE request to the specified URL with the provided token as authorization.
+
+    Parameters:
+    user (User): The User object for which the token is retrieved.
+    token (Token, optional): The Token object to use for authorization. Defaults to the token associated with the provided user.
+    url (str): The URL to send the DELETE request to.
+
+    Raises:
+    ValueError: If the URL or token key is not a string.
+
+    Returns:
+    requests.Response: The response object from the DELETE request.
+    """
+    if not token:
+        token = Token.objects.get(user=user)
+
+    # Ensure that url is a string
+    if not isinstance(url, str):
+        raise ValueError(f"url must be a string\nURL: {url}")
+
+    # Ensure that token.key is a string
+    if not isinstance(token.key, str):
+        raise ValueError("token.key must be a string")
+
+    # Concatenate 'Token ' and token.key
+    auth_header = 'Token ' + token.key
+
+    return requests.delete(url=url, headers={'Authorization': auth_header})
+
+
+def deleteUser(user):
+    """
+    Deletes the specified user.
+    """
+    url = 'http://user-api:8000/users/' + \
+        str(user.pk)  # TODO: correct the url
+
+    return sendDeleteRequest(user, url=url)
 
 # Create your views here.
 
@@ -21,6 +67,15 @@ def users(request):
 
 
 def reported(request):
+    """
+    Displays a list of users who have been reported.
+    """
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
+        userId = request.POST.get('userId')
+        user = get_object_or_404(User, pk=userId)
+        deleteUser(user)
+        return redirect('reports')
+
     # Subquery to count the number of reports for each user
     report_counts = Report.objects.filter(reported_id=OuterRef('id')).values('reported_id').annotate(
         report_count=Count('id')
@@ -58,6 +113,14 @@ def userDetails(request, pk):
 
 
 def userReportsDetails(request, pk):
+    """
+    Displays a list of reports for the specified user.
+    """
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
+        user = get_object_or_404(User, pk=pk)
+        deleteUser(user)
+        return redirect('userReportsDetails', pk)
+
     user = get_object_or_404(User, pk=pk)
     reports = Report.objects.filter(reported_id=pk)
     reports_count = reports.count()
@@ -66,10 +129,13 @@ def userReportsDetails(request, pk):
     if search_filter:
         user_set = User.objects.filter(username__icontains=search_filter)
         reports = reports.filter(reporter__in=user_set)
-
     return render(request, 'views/user_report_details.html', {'user': user, 'reports': reports, 'reports_count': reports_count})
 
 
 def reportDetails(request, pk):
     report = get_object_or_404(Report, pk=pk)
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
+        reportedId = str(report.reported.pk)
+        report.delete()
+        return redirect('userReportsDetails', reportedId)
     return render(request, 'views/report_details.html', {'report': report})
