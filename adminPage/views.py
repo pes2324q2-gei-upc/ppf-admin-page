@@ -45,7 +45,7 @@ def deleteUser(user):
     Deletes the specified user.
     """
     url = 'http://user-api:8000/users/' + \
-        str(user.pk)  # something
+        str(user.pk)
 
     return sendDeleteRequest(user, url=url)
 
