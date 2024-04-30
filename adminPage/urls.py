@@ -27,4 +27,5 @@ urlpatterns = [
     path('users/<int:pk>/reports/', views.userReportsDetails,
          name='userReportsDetails'),
     path('reports/<int:pk>/', views.reportDetails, name='reportsDetails'),
+    path('users/<int:pk>/edit/', views.userDetailsEdit, name='userDetailsEdit'),
 ]

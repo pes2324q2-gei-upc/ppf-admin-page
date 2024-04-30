@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 import requests
 from common.models.user import Driver, Report, User
 from rest_framework.authtoken.models import Token
+from adminPage.forms import UserForm
+from django.contrib.auth.hashers import make_password
 
 # create generic functions
 
@@ -48,8 +50,6 @@ def deleteUser(user):
         str(user.pk)
 
     return sendDeleteRequest(user, url=url)
-
-# Create your views here.
 
 
 def home(request):
@@ -110,6 +110,24 @@ def userDetails(request, pk):
         user_dict = searched_dict
 
     return render(request, 'views/user_details.html', {'user': user, 'user_data': user_dict})
+
+
+def userDetailsEdit(request, pk):
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            # Check if the password field is present and not hashed
+            if 'password' in form.cleaned_data and not form.cleaned_data['password'].startswith('$'):
+                form.cleaned_data['password'] = make_password(
+                    form.cleaned_data['password'])
+            form.save()
+            return redirect('userDetails', pk=pk)
+    else:
+        form = UserForm(instance=user)
+
+    return render(request, 'views/user_details_edit.html', {'form': form, 'user': user})
 
 
 def userReportsDetails(request, pk):
