@@ -97,6 +97,11 @@ def reported(request):
 
 def userDetails(request, pk):
     user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
+        deleteUser(user)
+        return redirect('home')
+
     user_dict = model_to_dict(user)  # type: ignore
 
     search_filter = request.GET.get('searching')
