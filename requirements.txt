@@ -5,7 +5,7 @@ certifi==2024.2.2
 charset-normalizer==3.3.2
 click==8.1.7
 dill==0.3.8
-Django==5.0.2
+Django==5.0.3
 djangorestframework==3.14.0
 drf-yasg==1.21.7
 idna==3.7
@@ -14,7 +14,7 @@ iniconfig==2.0.0
 isort==5.13.2
 mccabe==0.7.0
 mypy-extensions==1.0.0
-packaging==23.2
+packaging==24.0
 pathspec==0.12.1
 pep8==1.7.1
 platformdirs==4.2.0
