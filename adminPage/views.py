@@ -121,14 +121,14 @@ def userDetailsEdit(request, pk):
     user = get_object_or_404(User, pk=pk)
 
     if request.method == 'POST':
+        old_password = user.password
         form = UserForm(request.POST, instance=user)
         if form.is_valid():
-            # Check if the password field is present and not hashed
-            if 'password' in form.cleaned_data and not form.cleaned_data['password'].startswith('$'):
-                form.cleaned_data['password'] = make_password(
-                    form.cleaned_data['password'])
-            form.save()
-            return redirect('userDetails', pk=pk)
+            user = form.save(commit=False)
+            if (user.password != old_password):
+                user.set_password(user.password)
+            user.save()
+        return redirect('userDetails', pk=pk)
     else:
         form = UserForm(instance=user)
 
