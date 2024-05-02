@@ -53,7 +53,8 @@ def deleteUser(user):
 
 
 def home(request):
-    return render(request, 'views/home.html')
+    return redirect('users')
+    # return render(request, 'views/home.html')
 
 
 def users(request):
