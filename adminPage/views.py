@@ -45,6 +45,12 @@ def sendDeleteRequest(user, token=None, url=None):
 def deleteUser(user):
     """
     Deletes the specified user.
+
+    Args:
+        user (User): The user object to be deleted.
+
+    Returns:
+        requests.Response: The response object from the DELETE request.
     """
     url = 'http://user-api:8000/users/' + \
         str(user.pk)
@@ -58,6 +64,15 @@ def home(request):
 
 
 def users(request):
+    """
+    Retrieves all users from the database and filters them based on a search filter provided in the request query string.
+
+    Parameters:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered 'views/users.html' template with the filtered list of users.
+    """
     users = User.objects.all()
     search_filter = request.GET.get('searching')
 
@@ -70,7 +85,25 @@ def users(request):
 def reported(request):
     """
     Displays a list of users who have been reported.
+
+    Parameters:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered reported.html template with a queryset of users who have been reported.
+
+    This function handles the HTTP GET request for the 'reported' endpoint. It retrieves a list of users who have been reported and displays them in the reported.html template. The function first checks if the request method is POST and if the '_method' parameter is set to 'DELETE'. If so, it deletes the specified user and redirects to the 'reports' page. 
+
+    The function then performs a database query to count the number of reports for each user. It uses a subquery to annotate each user queryset with the report count. The queryset is filtered to include only users who have been reported at least once and is ordered by the report count in descending order.
+
+    If a 'searching' parameter is present in the request GET parameters, the queryset is further filtered to include only users whose username contains the search filter.
+
+    Finally, the function renders the reported.html template with the queryset of users who have been reported.
+
+    Note: The reported.html template expects a 'users' variable to be passed to it.
+
     """
+
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
         userId = request.POST.get('userId')
         user = get_object_or_404(User, pk=userId)
@@ -97,6 +130,26 @@ def reported(request):
 
 
 def userDetails(request, pk):
+    """
+    Retrieves and displays details of a user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        pk (int): The primary key of the user.
+
+    Returns:
+        HttpResponse: The rendered user details page.
+
+    Raises:
+        Http404: If the user with the given primary key does not exist.
+
+    This function retrieves a user object based on the provided primary key. If the request method is POST and the
+    '_method' parameter is set to 'DELETE', the user is deleted and the user is redirected to the 'home' page. Otherwise,
+    the function creates a dictionary representation of the user object using the 'model_to_dict' function. If a
+    'searching' parameter is provided in the request query string, the function filters the user dictionary to only
+    include key-value pairs that contain the search filter in either the key or the value. The filtered dictionary is
+    then rendered and returned as the response.
+    """
     user = get_object_or_404(User, pk=pk)
 
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
@@ -119,6 +172,25 @@ def userDetails(request, pk):
 
 
 def userDetailsEdit(request, pk):
+    """
+    Updates the details of a user with the given primary key.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        pk (int): The primary key of the user.
+
+    Returns:
+        HttpResponse: The rendered user details page if the request method is GET.
+                      Redirects to the 'userDetails' page with the updated user's primary key if the request method is POST.
+
+    Raises:
+        Http404: If the user with the given primary key does not exist.
+
+    This function retrieves a user object based on the provided primary key. If the request method is POST, it validates
+    the form data and updates the user's details. If the password has changed, it sets the new password. The user is then
+    saved and a redirect is performed to the 'userDetails' page with the updated user's primary key. If the request method
+    is GET, it renders the 'views/user_details_edit.html' template with the user form and the user object.
+    """
     user = get_object_or_404(User, pk=pk)
 
     if request.method == 'POST':
@@ -139,7 +211,24 @@ def userDetailsEdit(request, pk):
 def userReportsDetails(request, pk):
     """
     Displays a list of reports for the specified user.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        pk (int): The primary key of the user.
+
+    Returns:
+        HttpResponse: The rendered user report details page.
+
+    Raises:
+        Http404: If the user with the given primary key does not exist.
+
+    This function retrieves a user object based on the provided primary key. If the request method is POST and the
+    '_method' parameter is set to 'DELETE', the user is deleted and the user is redirected to the 'userReportsDetails'
+    page with the primary key of the user. Otherwise, the function retrieves a list of reports for the user and filters
+    them based on a search filter provided in the request query string. The function then renders the
+    'views/user_report_details.html' template with the user object, the list of reports, and the count of reports.
     """
+
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
         user = get_object_or_404(User, pk=pk)
         deleteUser(user)
@@ -157,6 +246,22 @@ def userReportsDetails(request, pk):
 
 
 def reportDetails(request, pk):
+    """
+    Retrieves a report object based on the provided primary key and displays its details.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        pk (int): The primary key of the report.
+
+    Returns:
+        HttpResponse: The rendered report details page if the request method is GET.
+                      Redirects to the 'userReportsDetails' page with the reported user's primary key if the request method is POST and the '_method' parameter is set to 'DELETE'.
+
+    Raises:
+        Http404: If the report with the given primary key does not exist.
+
+    This function retrieves a report object based on the provided primary key. If the request method is POST and the '_method' parameter is set to 'DELETE', the report is deleted and the user is redirected to the 'userReportsDetails' page with the reported user's primary key. Otherwise, the function renders the 'views/report_details.html' template with the report object.
+    """
     report = get_object_or_404(Report, pk=pk)
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
         reportedId = str(report.reported.pk)
