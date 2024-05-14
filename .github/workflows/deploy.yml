@@ -33,6 +33,8 @@ jobs:
 
     - name: Checkout of user api
       uses: actions/checkout@v4
+      with:
+        ref: main
 
     - name: Docker build and save image
       run: |
