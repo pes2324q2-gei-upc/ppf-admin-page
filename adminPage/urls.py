@@ -15,9 +15,8 @@ Class-based views
 """
 
 
-from django.urls import include, path
 from adminPage import views
-
+from django.urls import include, path
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -28,4 +27,9 @@ urlpatterns = [
          name='userReportsDetails'),
     path('reports/<int:pk>/', views.reportDetails, name='reportsDetails'),
     path('users/<int:pk>/edit/', views.userDetailsEdit, name='userDetailsEdit'),
+    path('routes/', views.routes, name='routes'),
+    path('routes/<int:pk>/', views.routeDetails, name='routeDetails'),
+    path('routes/<int:pk>/edit/', views.routeDetailsEdit, name='routeDetailsEdit'),
+    path('chatRooms/', views.chatRooms, name='chatRooms'),
+    path('chatRooms/<int:pk>/', views.chatRoomDetails, name='chatRoomDetails'),
 ]

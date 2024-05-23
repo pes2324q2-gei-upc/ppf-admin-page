@@ -1,11 +1,13 @@
-from django.forms import model_to_dict
-from django.db.models import Subquery, OuterRef, Count
-from django.shortcuts import get_object_or_404, redirect, render
 import requests
+from adminPage.forms import RouteForm, UserForm
+from common.models.route import Route
 from common.models.user import Driver, Report, User
-from rest_framework.authtoken.models import Token
-from adminPage.forms import UserForm
 from django.contrib.auth.hashers import make_password
+from django.db.models import Count, OuterRef, Q, Subquery
+from django.forms import model_to_dict
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from rest_framework.authtoken.models import Token
 
 # create generic functions
 
@@ -268,3 +270,63 @@ def reportDetails(request, pk):
         report.delete()
         return redirect('userReportsDetails', reportedId)
     return render(request, 'views/report_details.html', {'report': report})
+
+
+def routes(request):
+    routes = Route.objects.all()
+    if request.method == 'GET':
+        if request.GET.get('searching'):
+            search_filter = request.GET.get('searching')
+            routes = routes.filter(Q(destinationAlias__icontains=search_filter) | Q(
+                originAlias__icontains=search_filter))
+
+    return render(request, 'views/routes.html', {'routes': routes})
+
+
+def routeDetails(request, pk):
+    route = get_object_or_404(Route, pk=pk)
+    route_data = {}
+    for key, value in route.__dict__.items():
+        if key.startswith('_'):
+            continue
+        route_data[key] = value
+    route_data["passengers"] = route.passengers
+
+    search_filter = request.GET.get('searching')
+    if search_filter:
+        searched_dict = {}
+        for key, value in route_data.items():
+            if search_filter.lower() in key.lower() or search_filter.lower() in str(value).lower():
+                searched_dict[key] = value
+            elif route and hasattr(route, key) and str(getattr(route, key)).lower().find(search_filter.lower()) != -1:
+                searched_dict[key] = value
+        route_data = searched_dict
+
+    return render(request, 'views/route_details.html', {'route': route, 'route_data': route_data})
+
+
+def routeDetailsEdit(request, pk):
+    route = get_object_or_404(Route, pk=pk)
+    if request.method == 'POST':
+        form = RouteForm(request.POST, instance=route)
+        if form.is_valid():
+            route = form.save(commit=False)
+            route.save()
+        return redirect('routeDetails', pk=pk)
+    else:
+        form = RouteForm(instance=route)
+    return render(request, 'views/route_details_edit.html', {'form': form, 'route': route})
+
+
+def chatRooms(request):
+    routes = Route.objects.all()
+    if request.method == 'GET':
+        if request.GET.get('searching'):
+            search_filter = request.GET.get('searching')
+            routes = routes.filter(Q(destinationAlias__icontains=search_filter) | Q(
+                originAlias__icontains=search_filter))
+    return render(request, 'views/chat_rooms.html', {'routes': routes})
+
+
+def chatRoomDetails(request, pk):
+    return HttpResponse("Hello, world! You're at the chatroom %s." % pk)
