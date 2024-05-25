@@ -40,6 +40,7 @@ def sendDeleteRequest(user, token=None, url=None):
 
     # Concatenate 'Token ' and token.key
     auth_header = 'Token ' + token.key
+    print('request send to ' + url)
 
     return requests.delete(url=url, headers={'Authorization': auth_header})
 
@@ -328,5 +329,17 @@ def chatRooms(request):
     return render(request, 'views/chat_rooms.html', {'routes': routes})
 
 
+def get_messages(request, pk):
+    route = get_object_or_404(Route, pk=pk)
+    driver = get_object_or_404(User, pk=route.driver.pk)
+    token = Token.objects.get(user=driver).key
+    auth_header = 'Token ' + token
+    url = "http://localhost:8083/room/" + str(pk) + "/messages"
+    response = requests.get(url, headers={'Authorization': auth_header})
+    return response
+
+
 def chatRoomDetails(request, pk):
+    response = get_messages(request, pk)
+    print(response)
     return HttpResponse("Hello, world! You're at the chatroom %s." % pk)
