@@ -1,3 +1,5 @@
+import json
+
 import requests
 from adminPage.forms import RouteForm, UserForm
 from common.models.route import Route
@@ -334,12 +336,46 @@ def get_messages(request, pk):
     driver = get_object_or_404(User, pk=route.driver.pk)
     token = Token.objects.get(user=driver).key
     auth_header = 'Token ' + token
-    url = "http://localhost:8083/room/" + str(pk) + "/messages"
+    url = "http://chat-engine:8000/room/" + str(pk) + "/messages"
     response = requests.get(url, headers={'Authorization': auth_header})
     return response
+    """{
+    ···
+    "content": {
+        "status": "ok",
+        "messages": [
+            {
+                "ts": "<datetime RFC3339>" // 2006-01-02T15:04:05Z07:00
+                "content": "<message>",
+                "room": "<room_id>",
+                "sender": {
+                    "id": "<user_id>",
+                    "username": "<user_name>",
+                },
+            },
+            ...
+        ]
+    }
+    ···
+}
+    """
 
 
 def chatRoomDetails(request, pk):
     response = get_messages(request, pk)
-    print(response)
-    return HttpResponse("Hello, world! You're at the chatroom %s." % pk)
+    data = json.loads(response.content)
+
+    print(data)  # Inspect the structure of the data
+
+    # Since data is a list of messages
+    messages = data
+
+    # Retrieve the user objects and attach them to the messages
+    for message in messages:
+        sender_id = message['sender']
+        sender = User.objects.get(pk=sender_id)
+        message['sender'] = sender
+
+    route = get_object_or_404(Route, pk=pk)
+
+    return render(request, 'views/chat_room_details.html', {'messages': messages, 'route': route})
