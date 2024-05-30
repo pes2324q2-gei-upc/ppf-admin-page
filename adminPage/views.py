@@ -1,15 +1,20 @@
 import json
 
 import requests
-from adminPage.forms import RouteForm, UserForm
+from adminPage.forms import LoginForm, RouteForm, UserForm
 from common.models.route import Route
 from common.models.user import Driver, Report, User
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.forms import model_to_dict
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from rest_framework.authtoken.models import Token
+
+from .forms import LoginForm
 
 # create generic functions
 
@@ -379,3 +384,19 @@ def chatRoomDetails(request, pk):
     route = get_object_or_404(Route, pk=pk)
 
     return render(request, 'views/chat_room_details.html', {'messages': messages, 'route': route})
+
+
+def login(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            if username == 'ppf' and password == 'ppf_not_for_you':
+                # Authenticate the user
+                return HttpResponseRedirect(reverse('users'))
+            else:
+                form.add_error(None, 'Invalid username or password')
+    else:
+        form = LoginForm()
+    return render(request, 'views/login.html', {'form': form})

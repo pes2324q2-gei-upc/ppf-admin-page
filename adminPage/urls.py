@@ -19,7 +19,8 @@ from adminPage import views
 from django.urls import include, path
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views.login, name='login'),
+    path('home/', views.home, name='home'),
     path('users/', views.users, name='users'),
     path('users/<int:pk>/', views.userDetails, name='userDetails'),
     path('reported/', views.reported, name='reports'),
