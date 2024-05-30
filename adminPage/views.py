@@ -4,8 +4,6 @@ import requests
 from adminPage.forms import LoginForm, RouteForm, UserForm
 from common.models.route import Route
 from common.models.user import Driver, Report, User
-from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.forms import model_to_dict
@@ -14,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 
+from .decorators import login_required
 from .forms import LoginForm
 
 # create generic functions
@@ -62,8 +61,7 @@ def deleteUser(user):
     Returns:
         requests.Response: The response object from the DELETE request.
     """
-    url = 'http://user-api:8000/users/' + \
-        str(user.pk)
+    url = 'http://user-api:8000/users/' + str(user.pk)
 
     return sendDeleteRequest(user, url=url)
 
@@ -73,6 +71,7 @@ def home(request):
     # return render(request, 'views/home.html')
 
 
+@login_required
 def users(request):
     """
     Retrieves all users from the database and filters them based on a search filter provided in the request query string.
@@ -92,6 +91,7 @@ def users(request):
     return render(request, "views/users.html", {"users": users})
 
 
+@login_required
 def reported(request):
     """
     Displays a list of users who have been reported.
@@ -139,6 +139,7 @@ def reported(request):
     return render(request, "views/reported.html", {"users": users})
 
 
+@login_required
 def userDetails(request, pk):
     """
     Retrieves and displays details of a user.
@@ -181,6 +182,7 @@ def userDetails(request, pk):
     return render(request, 'views/user_details.html', {'user': user, 'user_data': user_dict})
 
 
+@login_required
 def userDetailsEdit(request, pk):
     """
     Updates the details of a user with the given primary key.
@@ -218,6 +220,7 @@ def userDetailsEdit(request, pk):
     return render(request, 'views/user_details_edit.html', {'form': form, 'user': user})
 
 
+@login_required
 def userReportsDetails(request, pk):
     """
     Displays a list of reports for the specified user.
@@ -255,6 +258,7 @@ def userReportsDetails(request, pk):
     return render(request, 'views/user_report_details.html', {'user': user, 'reports': reports, 'reports_count': reports_count})
 
 
+@login_required
 def reportDetails(request, pk):
     """
     Retrieves a report object based on the provided primary key and displays its details.
@@ -280,6 +284,7 @@ def reportDetails(request, pk):
     return render(request, 'views/report_details.html', {'report': report})
 
 
+@login_required
 def routes(request):
     routes = Route.objects.all()
     if request.method == 'GET':
@@ -291,6 +296,7 @@ def routes(request):
     return render(request, 'views/routes.html', {'routes': routes})
 
 
+@login_required
 def routeDetails(request, pk):
     route = get_object_or_404(Route, pk=pk)
     route_data = {}
@@ -313,6 +319,7 @@ def routeDetails(request, pk):
     return render(request, 'views/route_details.html', {'route': route, 'route_data': route_data})
 
 
+@login_required
 def routeDetailsEdit(request, pk):
     route = get_object_or_404(Route, pk=pk)
     if request.method == 'POST':
@@ -326,6 +333,7 @@ def routeDetailsEdit(request, pk):
     return render(request, 'views/route_details_edit.html', {'form': form, 'route': route})
 
 
+@login_required
 def chatRooms(request):
     routes = Route.objects.all()
     if request.method == 'GET':
@@ -336,36 +344,7 @@ def chatRooms(request):
     return render(request, 'views/chat_rooms.html', {'routes': routes})
 
 
-def get_messages(request, pk):
-    route = get_object_or_404(Route, pk=pk)
-    driver = get_object_or_404(User, pk=route.driver.pk)
-    token = Token.objects.get(user=driver).key
-    auth_header = 'Token ' + token
-    url = "http://chat-engine:8000/room/" + str(pk) + "/messages"
-    response = requests.get(url, headers={'Authorization': auth_header})
-    return response
-    """{
-    ···
-    "content": {
-        "status": "ok",
-        "messages": [
-            {
-                "ts": "<datetime RFC3339>" // 2006-01-02T15:04:05Z07:00
-                "content": "<message>",
-                "room": "<room_id>",
-                "sender": {
-                    "id": "<user_id>",
-                    "username": "<user_name>",
-                },
-            },
-            ...
-        ]
-    }
-    ···
-}
-    """
-
-
+@login_required
 def chatRoomDetails(request, pk):
     response = get_messages(request, pk)
     data = json.loads(response.content)
@@ -393,10 +372,21 @@ def login(request):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             if username == 'ppf' and password == 'ppf_not_for_you':
-                # Authenticate the user
+                # Set session variable to indicate successful login
+                request.session['is_logged_in'] = True
                 return HttpResponseRedirect(reverse('users'))
             else:
                 form.add_error(None, 'Invalid username or password')
     else:
         form = LoginForm()
     return render(request, 'views/login.html', {'form': form})
+
+
+def get_messages(request, pk):
+    route = get_object_or_404(Route, pk=pk)
+    driver = get_object_or_404(User, pk=route.driver.pk)
+    token = Token.objects.get(user=driver).key
+    auth_header = 'Token ' + token
+    url = "http://chat-engine:8000/room/" + str(pk) + "/messages"
+    response = requests.get(url, headers={'Authorization': auth_header})
+    return response
